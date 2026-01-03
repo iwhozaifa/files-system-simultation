@@ -1,24 +1,28 @@
 #include <iostream>
 #include <queue>
+#include <vector>
 using namespace std;
 
 class Node {
 private:
   int val;
-  Node *left;
-  Node *right;
+  vector<Node*> children;
 
 public:
   // Constructor
-  Node(int v) : val(v), left(NULL), right(NULL) {}
+  Node(int v) : val(v) {}
   // setters
   void setVal(int v) { val = v; }
-  void setLeft(Node *l) { left = l; }
-  void setRight(Node *r) { right = r; }
+  void addChild(Node *child) { children.push_back(child); }  //Adds Child to the Vector
   // Getters
   int getVal() { return val; }
-  Node *getLeft() { return left; }
-  Node *getRight() { return right; }
+  vector<Node*> getChildren() { return children; } 
+  int getChildCount() { return children.size(); }
+  Node* getChild(int index) { 
+    if (index >= 0 && index < children.size())
+      return children[index];
+    return NULL;
+  }
 };
 
 class Tree {
@@ -26,11 +30,13 @@ private:
   Node *root;
   Node *current;
 
-  void displayInorder(Node *ptr) {
+  void displayPreorder(Node *ptr) {
     if (ptr != NULL) {
-      displayInorder(ptr->getLeft());
       cout << ptr->getVal() << " ";
-      displayInorder(ptr->getRight());
+      vector<Node*> children = ptr->getChildren();
+      for (int i = 0; i < children.size(); i++) {
+        displayPreorder(children[i]);
+      }
     }
   }
 
@@ -46,24 +52,54 @@ public:
       root = nNode;
       return;
     }
-    Node *temp = root;
-    Node *parent = NULL;
 
-    while (temp != NULL) {
-      parent = temp;
-      if (val < temp->getVal())
-        temp = temp->getLeft();
-      else
-        temp = temp->getRight();
-    }
-    if (val < parent->getVal()) {
-      parent->setLeft(nNode);
-    } else {
-      parent->setRight(nNode);
+    
+    queue<Node*> q;
+    q.push(root);
+
+    while (!q.empty()) {
+      Node *curr = q.front();
+      q.pop();
+
+      // Add as child of current node and return
+      curr->addChild(nNode);
+      return;
     }
   }
 
-  void display() { displayInorder(root); }
+  void addNodeToParent(int val, int parentVal) {
+    Node *nNode = new Node(val);
+
+    if (root == NULL) {
+      root = nNode;
+      return;
+    }
+
+    Node *parent = findNode(root, parentVal);
+    if (parent != NULL) {
+      parent->addChild(nNode);
+    } else {
+      // If parent not found, add to root
+      root->addChild(nNode);
+    }
+  }
+
+private:
+  Node* findNode(Node *ptr, int val) {
+    if (ptr == NULL) return NULL;
+    if (ptr->getVal() == val) return ptr;
+
+    vector<Node*> children = ptr->getChildren();
+    for (int i = 0; i < children.size(); i++) {
+      Node *found = findNode(children[i], val);
+      if (found != NULL) return found;
+    }
+    return NULL;
+  }
+
+public:
+
+  void display() { displayPreorder(root); }
   void displayLevelOrder() {
     if (root == NULL) {
       cout << "Tree is empty." << endl;
@@ -76,24 +112,21 @@ public:
     cout << "Tree Level Display:" << endl;
 
     while (!q.empty()) {
-      int nodesAtCurrentLevel = q.size(); // Number of nodes at this level
+      int nodesAtCurrentLevel = q.size();
 
-      // Process all nodes at the current level
       while (nodesAtCurrentLevel > 0) {
         Node *curr = q.front();
         q.pop();
 
         cout << curr->getVal() << " ";
 
-        // Push children to the queue for the next level
-        if (curr->getLeft() != NULL)
-          q.push(curr->getLeft());
-        if (curr->getRight() != NULL)
-          q.push(curr->getRight());
+        vector<Node*> children = curr->getChildren();
+        for (int i = 0; i < children.size(); i++) {
+          q.push(children[i]);
+        }
 
         nodesAtCurrentLevel--;
       }
-      // Finished one level, move to next line
       cout << endl;
     }
   }
@@ -101,10 +134,12 @@ public:
 
 int main() {
   Tree t;
-  t.addNode(10);
-  t.addNode(4);
-  t.addNode(6);
-  t.addNode(7);
+  t.addNode(10);  // Root
+  t.addNodeToParent(4, 10);   
+  t.addNodeToParent(6, 10);   
+  t.addNodeToParent(7, 10);     
+  t.addNodeToParent(2, 10);    
+  t.addNodeToParent(5, 10);   
 
   t.display();
 
