@@ -1,43 +1,60 @@
 #include <iostream>
 #include <queue>
+// #include <string>
 #include <vector>
 using namespace std;
 
 class Node {
 private:
   int val;
-  vector<Node*> children;
+  vector<Node *> children;
 
 public:
   // Constructor
   Node(int v) : val(v) {}
   // setters
   void setVal(int v) { val = v; }
-  void addChild(Node *child) { children.push_back(child); }  //Adds Child to the Vector
+  void addChild(Node *child) {
+    children.push_back(child);
+  } // Adds Child to the Vector
   // Getters
   int getVal() { return val; }
-  vector<Node*> getChildren() { return children; } 
+  vector<Node *> getChildren() { return children; }
   int getChildCount() { return children.size(); }
-  Node* getChild(int index) { 
+  Node *getChild(int index) {
     if (index >= 0 && index < children.size())
       return children[index];
     return NULL;
   }
 };
-
+// The main tree Class
 class Tree {
 private:
   Node *root;
   Node *current;
 
-  void displayPreorder(Node *ptr) {
-    if (ptr != NULL) {
-      cout << ptr->getVal() << " ";
-      vector<Node*> children = ptr->getChildren();
-      for (int i = 0; i < children.size(); i++) {
-        displayPreorder(children[i]);
-      }
+  // void displayPreorder(Node *ptr) {
+  //   if (ptr != NULL) {
+  //     cout << ptr->getVal() << " ";
+  //     vector<Node*> children = ptr->getChildren();
+  //     for (int i = 0; i < children.size(); i++) {
+  //       displayPreorder(children[i]);
+  //     }
+  //   }
+  // }
+  Node *findNode(Node *ptr, int val) {
+    if (ptr == NULL)
+      return NULL;
+    if (ptr->getVal() == val)
+      return ptr;
+
+    vector<Node *> children = ptr->getChildren();
+    for (int i = 0; i < children.size(); i++) {
+      Node *found = findNode(children[i], val);
+      if (found != NULL)
+        return found;
     }
+    return NULL;
   }
 
 public:
@@ -53,8 +70,7 @@ public:
       return;
     }
 
-    
-    queue<Node*> q;
+    queue<Node *> q;
     q.push(root);
 
     while (!q.empty()) {
@@ -84,68 +100,49 @@ public:
     }
   }
 
-private:
-  Node* findNode(Node *ptr, int val) {
-    if (ptr == NULL) return NULL;
-    if (ptr->getVal() == val) return ptr;
-
-    vector<Node*> children = ptr->getChildren();
-    for (int i = 0; i < children.size(); i++) {
-      Node *found = findNode(children[i], val);
-      if (found != NULL) return found;
-    }
-    return NULL;
-  }
-
-public:
-
-  void display() { displayPreorder(root); }
   void displayLevelOrder() {
-    if (root == NULL) {
+    Node *targetNode = (current != NULL) ? current : root;
+
+    if (targetNode == NULL) {
       cout << "Tree is empty." << endl;
       return;
     }
 
-    queue<Node *> q;
-    q.push(root);
+    cout << "Children of node " << targetNode->getVal() << ":" << endl;
 
-    cout << "Tree Level Display:" << endl;
-
-    while (!q.empty()) {
-      int nodesAtCurrentLevel = q.size();
-
-      while (nodesAtCurrentLevel > 0) {
-        Node *curr = q.front();
-        q.pop();
-
-        cout << curr->getVal() << " ";
-
-        vector<Node*> children = curr->getChildren();
-        for (int i = 0; i < children.size(); i++) {
-          q.push(children[i]);
-        }
-
-        nodesAtCurrentLevel--;
-      }
-      cout << endl;
+    vector<Node *> children = targetNode->getChildren();
+    if (children.size() == 0) {
+      cout << "No children." << endl;
+      return;
     }
+
+    for (int i = 0; i < children.size(); i++) {
+      cout << children[i]->getVal() << " ";
+    }
+    cout << endl;
   }
 };
 
 int main() {
   Tree t;
-  t.addNode(10);  // Root
-  t.addNodeToParent(4, 10);   
-  t.addNodeToParent(6, 10);   
-  t.addNodeToParent(7, 10);     
-  t.addNodeToParent(2, 10);    
-  t.addNodeToParent(5, 10);   
+  t.addNode(10); // Root
+  t.addNodeToParent(4, 10);
+  t.addNodeToParent(6, 10);
+  t.addNodeToParent(7, 10);
+  t.addNodeToParent(2, 10);
+  t.addNodeToParent(5, 10);
 
-  t.display();
+  t.addNodeToParent(69, 4);
 
   cout << endl << endl;
 
   t.displayLevelOrder();
+
 }
 
-// TODO : Making a Tree and Adding objects as children
+// TODO:  Making a Tree and Adding objects as children
+// TODO:  make a new file -> add a children to the parent with no sub children
+// TODO:  Enum for diffrenetiation btw file and folder
+// TODO:  Deleting a Node -> if a folder is deleted then all of it's children
+// are deleted
+// TODO:  Parent specification when adding children in a directory
