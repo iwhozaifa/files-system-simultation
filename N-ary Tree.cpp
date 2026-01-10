@@ -2,6 +2,7 @@
 #include <queue>
 #include <string>
 #include <vector>
+#include <sstream>
 using namespace std;
 
 enum NodeType { FILE_NODE, FOLDER_NODE };
@@ -19,13 +20,6 @@ public:
   // setters
   void setVal(int v) { val = v; }
   
-  bool addChild(Node *child) {
-    if (type == FILE_NODE) {
-      return false; // Files cannot have children
-    }
-    children.push_back(child);
-    return true;
-  } // Adds Child to the Vector
   // Getters
   int getVal() { return val; }
   
@@ -40,14 +34,26 @@ public:
       return children[index];
     return NULL;
   }
+
+  //Member Function
+  bool addChild(Node *child) {
+    if (type == FILE_NODE) {
+      return false; // Files cannot have children
+    }
+    children.push_back(child);
+    return true;
+  } // Adds Child to the Vector
+  
   bool canHaveChildren() { return type == FOLDER_NODE; }
 };
+
 // The main tree Class
 class Tree {
 private:
   Node *root;
   Node *current;
 
+  //Helper Function For finding the Node based on value
   Node *findNode(Node *ptr, int val) {
     if (ptr == NULL)
       return NULL;
@@ -66,7 +72,8 @@ private:
 public:
   // Constructor
   Tree() : root(NULL), current(NULL) {}
-  // Helper Functions
+  
+  // Main Functions
 
   void addNode(string command, int val) {
     NodeType nodeType;
@@ -76,7 +83,7 @@ public:
     } else if (command == "mkdir") {
       nodeType = FOLDER_NODE;
     } else {
-      cout << "Invalid command. Use 'touch' or 'mkdir'." << endl;
+      cout << "Invalid command. Use 'touch' or 'mkdir' to add new files." << endl;
       return;
     }
 
@@ -145,6 +152,41 @@ public:
     }
   }
 
+  void setCurrent(string command) {
+    if (root == NULL) {
+      cout << "Tree is empty." << endl;
+      return;
+    }
+
+    // Parse the command "cd (value)"
+    istringstream iss(command);
+    string cmd;
+    int val;
+    
+    iss >> cmd >> val;
+    
+    if (cmd != "cd") {
+      cout << "Invalid command format. Use 'cd (value)'." << endl;
+      return;
+    }
+
+    Node *found = findNode(root, val);
+    if (found == NULL) {
+      cout << "No such directory exists." << endl;
+      return;
+    }
+
+    // Check if the node is a folder
+    if (found->getType() != FOLDER_NODE) {
+      cout << "No such directory exists." << endl;
+      return;
+    }
+
+    // Set current to the found folder node
+    current = found;
+    cout << "Current root set to node " << val << "." << endl;
+  }
+
   void displayLevelOrder() {
     Node *targetNode = (current != NULL) ? current : root;
 
@@ -177,9 +219,12 @@ int main() {
   t.addNodeToParent("touch", 2, 10);
   t.addNodeToParent("mkdir", 5, 10);
 
-  t.addNodeToParent("touch", 69, 4);
+  t.addNodeToParent("touch", 61, 4);
+  t.addNodeToParent("touch", 48, 4);
+  
+  t.setCurrent("cd 7");
 
-  cout << endl << endl;
+  // cout << endl << endl;
 
   t.displayLevelOrder();
 
