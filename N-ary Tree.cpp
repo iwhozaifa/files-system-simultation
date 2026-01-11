@@ -285,27 +285,88 @@ public:
     }
     cout << endl;
   }
+
+  int getCurrentValue() {
+    Node *targetNode = (current != NULL) ? current : root;
+    if (targetNode == NULL)
+      return -1;
+    return targetNode->getVal();
+  }
 };
 
 int main() {
   Tree t;
-  t.addNode("mkdir", 10); // Root
-  t.addNodeToParent("mkdir", 4, 10);
-  t.addNodeToParent("mkdir", 6, 10);
-  t.addNodeToParent("touch", 7, 10);
-  t.addNodeToParent("touch", 2, 10);
-  t.addNodeToParent("mkdir", 5, 10);
+  int choice;
+  string command;
+  int val, parentVal;
+  int addChoice;
 
-  t.addNodeToParent("touch", 61, 4);
-  t.addNodeToParent("touch", 48, 4);
-  
-  t.setCurrent("cd", 4);
-  t.removeNode("rm", 4);
+  do {
+    cout << "\n-----File System Simulation-----" << endl;
+    cout << "Current Directory: " << (t.getCurrentValue() != -1 ? to_string(t.getCurrentValue()) : "Root") << endl;
+    cout << "1. Add a File / Folder" << endl;
+    cout << "2. Show members of current folder" << endl;
+    cout << "3. Delete a file or a folder" << endl;
+    cout << "4. Change directory" << endl;
+    cout << "5. Exit" << endl;
+    cout << "Enter your choice: ";
+    cin >> choice;
 
-  // cout << endl << endl;
+    switch (choice) {
+    case 1: {
+      cout << "\n---Add a File / Folder---" << endl;
+      cout << "1. Add to current directory" << endl;
+      cout << "2. Add to specific parent" << endl;
+      cout << "Enter choice: ";
+      cin >> addChoice;
 
-  t.displayLevelOrder();
+      cout << "Enter command (touch for file, mkdir for folder): ";
+      cin >> command;
+      cout << "Enter value: ";
+      cin >> val;
 
+      if (addChoice == 1) {
+        t.addNode(command, val);
+      } else if (addChoice == 2) {
+        cout << "Enter parent value: ";
+        cin >> parentVal;
+        t.addNodeToParent(command, val, parentVal);
+      } else {
+        cout << "Invalid choice." << endl;
+      }
+      break;
+    }
+    case 2: {
+      cout << "\n---Members of Current Folder---" << endl;
+      t.displayLevelOrder();
+      break;
+    }
+    case 3: {
+      cout << "\n---Delete a File or Folder---" << endl;
+      cout << "Enter value of node to delete: ";
+      cin >> val;
+      t.removeNode("rm", val);
+      break;
+    }
+    case 4: {
+      cout << "\n---Change Directory---" << endl;
+      cout << "Enter value of directory to switch to: ";
+      cin >> val;
+      t.setCurrent("cd", val);
+      break;
+    }
+    case 5: {
+      cout << "Exiting program..." << endl;
+      break;
+    }
+    default: {
+      cout << "Invalid choice. Please try again." << endl;
+      break;
+    }
+    }
+  } while (choice != 5);
+
+  return 0;
 }
 
 // TODO:  Making a Tree and Adding objects as children
