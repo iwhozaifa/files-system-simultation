@@ -2,7 +2,6 @@
 #include <queue>
 #include <string>
 #include <vector>
-#include <sstream>
 using namespace std;
 
 enum NodeType { FILE_NODE, FOLDER_NODE };
@@ -44,6 +43,16 @@ public:
     return true;
   } // Adds Child to the Vector
   
+  bool removeChild(Node *child) {
+    for (int i = 0; i < children.size(); i++) {
+      if (children[i] == child) {
+        children.erase(children.begin() + i);
+        return true;
+      }
+    }
+    return false;
+  }
+  
   bool canHaveChildren() { return type == FOLDER_NODE; }
 };
 
@@ -67,6 +76,35 @@ private:
         return found;
     }
     return NULL;
+  }
+
+  // Helper function to find parent of a node
+  Node *findParent(Node *ptr, int val, Node *parent = NULL) {
+    if (ptr == NULL)
+      return NULL;
+    if (ptr->getVal() == val)
+      return parent;
+
+    vector<Node *> children = ptr->getChildren();
+    for (int i = 0; i < children.size(); i++) {
+      Node *found = findParent(children[i], val, ptr);
+      if (found != NULL)
+        return found;
+    }
+    return NULL;
+  }
+
+  // Helper function to recursively delete all children of a node
+  void deleteChildren(Node *ptr) {
+    if (ptr == NULL)
+      return;
+
+    vector<Node *> children = ptr->getChildren();
+    for (int i = 0; i < children.size(); i++) {
+      // Recursively delete children first
+      deleteChildren(children[i]);
+      delete children[i];
+    }
   }
 
 public:
@@ -152,21 +190,14 @@ public:
     }
   }
 
-  void setCurrent(string command) {
+  void setCurrent(string command, int val) {
     if (root == NULL) {
       cout << "Tree is empty." << endl;
       return;
     }
 
-    // Parse the command "cd (value)"
-    istringstream iss(command);
-    string cmd;
-    int val;
-    
-    iss >> cmd >> val;
-    
-    if (cmd != "cd") {
-      cout << "Invalid command format. Use 'cd (value)'." << endl;
+    if (command != "cd") {
+      cout << "Invalid command format. Use 'cd'." << endl;
       return;
     }
 
@@ -185,6 +216,52 @@ public:
     // Set current to the found folder node
     current = found;
     cout << "Current root set to node " << val << "." << endl;
+  }
+
+  void removeNode(string command, int val) {
+    if (command != "rm") {
+      cout << "Invalid command. Use 'rm' to remove nodes." << endl;
+      return;
+    }
+
+    if (root == NULL) {
+      cout << "Tree is empty." << endl;
+      return;
+    }
+
+    Node *nodeToDelete = findNode(root, val);
+    if (nodeToDelete == NULL) {
+      cout << "Node with value " << val << " not found." << endl;
+      return;
+    }
+
+    // If it's a folder, delete all its children recursively
+    if (nodeToDelete->getType() == FOLDER_NODE) {
+      deleteChildren(nodeToDelete);
+    }
+
+    // Handle root deletion
+    if (nodeToDelete == root) {
+      delete root;
+      root = NULL;
+      current = NULL;
+      cout << "Root node " << val << " deleted." << endl;
+      return;
+    }
+
+    // Find parent and remove node from parent's children
+    Node *parent = findParent(root, val);
+    if (parent != NULL) {
+      parent->removeChild(nodeToDelete);
+    }
+
+    // If current points to the deleted node or any of its descendants, reset it
+    if (current == nodeToDelete || (current != NULL && findNode(nodeToDelete, current->getVal()) != NULL)) {
+      current = NULL;
+    }
+
+    delete nodeToDelete;
+    cout << "Node " << val << " deleted successfully." << endl;
   }
 
   void displayLevelOrder() {
@@ -222,7 +299,8 @@ int main() {
   t.addNodeToParent("touch", 61, 4);
   t.addNodeToParent("touch", 48, 4);
   
-  t.setCurrent("cd 7");
+  t.setCurrent("cd", 4);
+  t.removeNode("rm", 4);
 
   // cout << endl << endl;
 
