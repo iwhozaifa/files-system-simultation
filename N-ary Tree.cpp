@@ -1,5 +1,4 @@
 #include <iostream>
-#include <queue>
 #include <string>
 #include <vector>
 using namespace std;
@@ -8,33 +7,33 @@ enum NodeType { FILE_NODE, FOLDER_NODE };
 
 class Node {
 private:
-  int val;
+  string val;
   vector<Node *> children;
   NodeType type;
 
 public:
   // Constructor
-  Node(int v, NodeType t = FOLDER_NODE) : val(v), type(t) {}
-  
+  Node(string v, NodeType t = FOLDER_NODE) : val(v), type(t) {}
+
   // setters
-  void setVal(int v) { val = v; }
-  
+  void setVal(string v) { val = v; }
+
   // Getters
-  int getVal() { return val; }
-  
+  string getVal() { return val; }
+
   NodeType getType() { return type; }
-  
+
   vector<Node *> getChildren() { return children; }
-  
+
   int getChildCount() { return children.size(); }
-  
+
   Node *getChild(int index) {
     if (index >= 0 && index < children.size())
       return children[index];
     return NULL;
   }
 
-  //Member Function
+  // Member Function
   bool addChild(Node *child) {
     if (type == FILE_NODE) {
       return false; // Files cannot have children
@@ -42,7 +41,7 @@ public:
     children.push_back(child);
     return true;
   } // Adds Child to the Vector
-  
+
   bool removeChild(Node *child) {
     for (int i = 0; i < children.size(); i++) {
       if (children[i] == child) {
@@ -52,7 +51,7 @@ public:
     }
     return false;
   }
-  
+
   bool canHaveChildren() { return type == FOLDER_NODE; }
 };
 
@@ -62,8 +61,8 @@ private:
   Node *root;
   Node *current;
 
-  //Helper Function For finding the Node based on value
-  Node *findNode(Node *ptr, int val) {
+  // Helper Function For finding the Node based on value
+  Node *findNode(Node *ptr, string val) {
     if (ptr == NULL)
       return NULL;
     if (ptr->getVal() == val)
@@ -79,7 +78,7 @@ private:
   }
 
   // Helper function to find parent of a node
-  Node *findParent(Node *ptr, int val, Node *parent = NULL) {
+  Node *findParent(Node *ptr, string val, Node *parent = NULL) {
     if (ptr == NULL)
       return NULL;
     if (ptr->getVal() == val)
@@ -110,18 +109,19 @@ private:
 public:
   // Constructor
   Tree() : root(NULL), current(NULL) {}
-  
+
   // Main Functions
 
-  void addNode(string command, int val) {
+  void addNode(string command, string val) {
     NodeType nodeType;
-    
+
     if (command == "touch") {
       nodeType = FILE_NODE;
     } else if (command == "mkdir") {
       nodeType = FOLDER_NODE;
     } else {
-      cout << "Invalid command. Use 'touch' or 'mkdir' to add new files." << endl;
+      cout << "Invalid command. Use 'touch' or 'mkdir' to add new files."
+           << endl;
       return;
     }
 
@@ -133,7 +133,7 @@ public:
     }
 
     Node *targetNode = (current != NULL) ? current : root;
-    
+
     if (!targetNode->canHaveChildren()) {
       cout << "Cannot add child to a file node." << endl;
       delete nNode;
@@ -146,9 +146,9 @@ public:
     }
   }
 
-  void addNodeToParent(string command, int val, int parentVal) {
+  void addNodeToParent(string command, string val, string parentVal) {
     NodeType nodeType;
-    
+
     if (command == "touch") {
       nodeType = FILE_NODE;
     } else if (command == "mkdir") {
@@ -190,7 +190,7 @@ public:
     }
   }
 
-  void setCurrent(string command, int val) {
+  void setCurrent(string command, string val) {
     if (root == NULL) {
       cout << "Tree is empty." << endl;
       return;
@@ -218,7 +218,7 @@ public:
     cout << "Current root set to node " << val << "." << endl;
   }
 
-  void removeNode(string command, int val) {
+  void removeNode(string command, string val) {
     if (command != "rm") {
       cout << "Invalid command. Use 'rm' to remove nodes." << endl;
       return;
@@ -256,7 +256,9 @@ public:
     }
 
     // If current points to the deleted node or any of its descendants, reset it
-    if (current == nodeToDelete || (current != NULL && findNode(nodeToDelete, current->getVal()) != NULL)) {
+    if (current == nodeToDelete ||
+        (current != NULL &&
+         findNode(nodeToDelete, current->getVal()) != NULL)) {
       current = NULL;
     }
 
@@ -285,27 +287,90 @@ public:
     }
     cout << endl;
   }
+
+  string getCurrentValue() {
+    Node *targetNode = (current != NULL) ? current : root;
+    if (targetNode == NULL)
+      return "";
+    return targetNode->getVal();
+  }
 };
 
 int main() {
   Tree t;
-  t.addNode("mkdir", 10); // Root
-  t.addNodeToParent("mkdir", 4, 10);
-  t.addNodeToParent("mkdir", 6, 10);
-  t.addNodeToParent("touch", 7, 10);
-  t.addNodeToParent("touch", 2, 10);
-  t.addNodeToParent("mkdir", 5, 10);
+  int choice;
+  string command;
+  string val, parentVal;
+  int addChoice;
 
-  t.addNodeToParent("touch", 61, 4);
-  t.addNodeToParent("touch", 48, 4);
-  
-  t.setCurrent("cd", 4);
-  t.removeNode("rm", 4);
+  do {
+    cout << "\n-----File System Simulation-----" << endl;
+    string currentDir = t.getCurrentValue();
+    cout << "Current Directory: " << (currentDir != "" ? currentDir : "Root")
+         << endl;
+    cout << "1. Add a File / Folder" << endl;
+    cout << "2. Show members of current folder" << endl;
+    cout << "3. Delete a file or a folder" << endl;
+    cout << "4. Change directory" << endl;
+    cout << "5. Exit" << endl;
+    cout << "Enter your choice: ";
+    cin >> choice;
 
-  // cout << endl << endl;
+    switch (choice) {
+    case 1: {
+      cout << "\n---Add a File / Folder---" << endl;
+      cout << "1. Add to current directory" << endl;
+      cout << "2. Add to specific parent" << endl;
+      cout << "Enter choice: ";
+      cin >> addChoice;
 
-  t.displayLevelOrder();
+      cout << "Enter command (touch for file, mkdir for folder): ";
+      cin >> command;
+      cout << "Enter name: ";
+      cin >> val;
 
+      if (addChoice == 1) {
+        t.addNode(command, val);
+      } else if (addChoice == 2) {
+        cout << "Enter parent name: ";
+        cin >> parentVal;
+        t.addNodeToParent(command, val, parentVal);
+      } else {
+        cout << "Invalid choice." << endl;
+      }
+      break;
+    }
+    case 2: {
+      cout << "\n---Members of Current Folder---" << endl;
+      t.displayLevelOrder();
+      break;
+    }
+    case 3: {
+      cout << "\n---Delete a File or Folder---" << endl;
+      cout << "Enter name of node to delete: ";
+      cin >> val;
+      t.removeNode("rm", val);
+      break;
+    }
+    case 4: {
+      cout << "\n---Change Directory---" << endl;
+      cout << "Enter name of directory to switch to: ";
+      cin >> val;
+      t.setCurrent("cd", val);
+      break;
+    }
+    case 5: {
+      cout << "Exiting program..." << endl;
+      break;
+    }
+    default: {
+      cout << "Invalid choice. Please try again." << endl;
+      break;
+    }
+    }
+  } while (choice != 5);
+
+  return 0;
 }
 
 // TODO:  Making a Tree and Adding objects as children
